@@ -6,8 +6,9 @@ import (
 	"net/http"
 )
 
-// CreateHandler takes an "OutMessage" creator and returns a handler
-func CreateHandler(creator OutMessage, tag Tag, tagName string) func(http.ResponseWriter, *http.Request) {
+// CreateHandler returns a http.handler.
+// It takes as input a Messager interface
+func CreateHandler(creator Messager, tag Tag, tagName string) func(http.ResponseWriter, *http.Request) {
 
 	// ServeWs handles websocket requests from the peer.
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +33,7 @@ func CreateHandler(creator OutMessage, tag Tag, tagName string) func(http.Respon
 			log.Println(err)
 			return
 		}
-		conn := &Conn{send: make(chan OutMessage, 256), ws: ws}
+		conn := &Conn{send: make(chan Messager, 256), ws: ws}
 		reply := &reply{
 			Message: creator,
 			Tag:     tag,
@@ -40,7 +41,7 @@ func CreateHandler(creator OutMessage, tag Tag, tagName string) func(http.Respon
 		}
 		defer close(reply.Rep)
 
-		AllHubs.Request <- reply
+		allHubs.Request <- reply
 		hub := <-reply.Rep
 		hub.register <- conn
 		go conn.writePump()

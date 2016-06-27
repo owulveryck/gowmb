@@ -8,10 +8,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-// OutMessage is the message that will be output
-type OutMessage interface {
-	Set(n []byte) error
-	Serialize() ([]byte, error)
+func init() {
+	go allHubs.Run()
 }
 
 // hub maintains the set of active connections and broadcasts messages to the
@@ -24,13 +22,13 @@ type hub struct {
 	connections map[*Conn]bool
 
 	// The last message broadcasted
-	message *OutMessage
+	message *Messager
 
 	// Inbound messages from the connections for processing purpose.
 	process chan []byte
 
 	// Inbound messages from the connections.
-	broadcast chan OutMessage
+	broadcast chan Messager
 
 	// Register requests from the connections.
 	register chan *Conn
@@ -53,12 +51,12 @@ type hubs struct {
 
 type reply struct {
 	Tag     Tag
-	Message OutMessage
+	Message Messager
 	Rep     chan *hub
 }
 
-// AllHubs is the actual registry of all hubs
-var AllHubs = hubs{
+// allHubs is the actual registry of all hubs
+var allHubs = hubs{
 	unregister: make(chan Tag),
 	Request:    make(chan *reply),
 	hubs:       make(map[Tag]*hub),
@@ -75,7 +73,7 @@ func (h *hubs) Run() {
 					Tag:         r.Tag,
 					message:     &r.Message,
 					process:     make(chan []byte),
-					broadcast:   make(chan OutMessage),
+					broadcast:   make(chan Messager),
 					register:    make(chan *Conn),
 					unregister:  make(chan *Conn),
 					connections: make(map[*Conn]bool),
@@ -125,7 +123,7 @@ func (h *hub) run() {
 			}
 			// If the last element has been removed exit)
 			if len(h.connections) == 0 {
-				AllHubs.unregister <- h.Tag
+				allHubs.unregister <- h.Tag
 				return
 			}
 		case inMessage := <-h.process:
