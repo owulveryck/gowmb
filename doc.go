@@ -11,5 +11,11 @@ Assuming you've defined a Messenger'c compatible message type, every client conn
 the web-path server by the defined handler will receive a Serialize version of the Message
 each time the server's websocket detects an event.
 
+Tip's and tricks
+
+The broker does not validate the format of the message.
+The message is "acked" at the protocol level, but the broker does not advertize any client
+that a message has been discarded
+
 */
 package gowmb
