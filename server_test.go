@@ -153,7 +153,7 @@ func TestServeWs(t *testing.T) {
 	err = c.WriteMessage(websocket.TextMessage, b)
 	t.Logf("Done...")
 	if err != nil {
-		t.Errorf("write:", err)
+		t.Errorf("write: %v", err)
 	}
 	t.Logf("Waiting...")
 	<-done
