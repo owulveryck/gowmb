@@ -41,7 +41,7 @@ type Conn struct {
 	ws *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send chan OutMessage
+	send chan Messager
 }
 
 // readPump pumps messages from the websocket connection to the hub.
