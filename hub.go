@@ -19,7 +19,7 @@ type hub struct {
 	Tag Tag
 
 	// Registered connections.
-	connections map[*Conn]bool
+	connections map[*conn]bool
 
 	// The last message broadcasted
 	message *Messager
@@ -31,10 +31,10 @@ type hub struct {
 	broadcast chan Messager
 
 	// Register requests from the connections.
-	register chan *Conn
+	register chan *conn
 
 	// Unregister requests from connections.
-	unregister chan *Conn
+	unregister chan *conn
 }
 
 // hubs maintains the set of active hubs
@@ -74,9 +74,9 @@ func (h *hubs) Run() {
 					message:     &r.Message,
 					process:     make(chan []byte),
 					broadcast:   make(chan Messager),
-					register:    make(chan *Conn),
-					unregister:  make(chan *Conn),
-					connections: make(map[*Conn]bool),
+					register:    make(chan *conn),
+					unregister:  make(chan *conn),
+					connections: make(map[*conn]bool),
 				}
 				var contextLogger = log.WithFields(log.Fields{
 					"Tag": r.Tag,
