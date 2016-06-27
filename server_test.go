@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"testing"
 )
 
@@ -25,8 +26,7 @@ type Message struct {
 	ID int `json:"id"`
 }
 
-// CreateMessage creates a new message and returns a pointer
-func CreateMessage() *Message {
+func createMessage() *Message {
 	return &Message{}
 }
 
@@ -48,10 +48,26 @@ func (m *Message) Set(n []byte) error {
 	m.ID = message.ID
 	return nil
 }
+
+type tag int
+
+func (t *tag) Parse(s string) error {
+	v, err := strconv.Atoi(s)
+	if err != nil {
+		return err
+	}
+	*t = tag(v)
+	return nil
+}
+
+func newTag() *tag {
+	return new(tag)
+}
+
 func init() {
 	router := mux.NewRouter().StrictSlash(true)
 
-	handler := gowmb.CreateHandler(CreateMessage())
+	handler := gowmb.CreateHandler(createMessage(), newTag(), "tag")
 	router.
 		Methods("GET").
 		Path("/serveWs/{tag}").
