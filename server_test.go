@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/owulveryck/topology-presentation/message"
-	//	"github.com/owulveryck/topology-presentation/server"
+	"github.com/owulveryck/gowmb"
 	"time"
 
+	"github.com/gorilla/mux"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -21,9 +21,43 @@ var (
 	baseWsURL  string
 )
 
+type Message struct {
+	ID int `json:"id"`
+}
+
+// CreateMessage creates a new message and returns a pointer
+func CreateMessage() *Message {
+	return &Message{}
+}
+
+// Serialize returns a byte array of the message
+func (m *Message) Serialize() ([]byte, error) {
+	return json.Marshal(m)
+}
+
+// Set function updates the content of message m awwording to input n
+// And it fills the Msg's interface Contract
+func (m *Message) Set(n []byte) error {
+	var message struct {
+		ID int `json:"int"`
+	}
+	err := json.Unmarshal(n, &message)
+	if err != nil {
+		return err
+	}
+	m.ID = message.ID
+	return nil
+}
 func init() {
-	router := server.NewRouter()
-	go server.AllHubs.Run()
+	router := mux.NewRouter().StrictSlash(true)
+
+	handler := gowmb.CreateHandler(CreateMessage())
+	router.
+		Methods("GET").
+		Path("/serveWs/{tag}").
+		Name("WebSocket").
+		HandlerFunc(handler)
+
 	testServer = httptest.NewServer(router) //Creating new server with the user handlers
 
 	baseWsURL = fmt.Sprintf("%s/serveWs/", testServer.URL) //Grab the address for the endpoint
@@ -105,7 +139,11 @@ func TestServeWs(t *testing.T) {
 		t.Logf("recv: %s", message)
 		done <- true
 	}()
-	message := &message.Node{}
+	type input struct {
+		ID int `json:"id"`
+	}
+
+	message := &input{ID: 0}
 	b, err := json.Marshal(message)
 	if err != nil {
 		t.Error(err)

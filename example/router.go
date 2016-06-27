@@ -26,16 +26,16 @@ func NewRouter() *mux.Router {
 
 	router := mux.NewRouter().StrictSlash(true)
 
+	handler := gowmb.CreateHandler(CreateMessage())
 	router.
 		Methods("GET").
 		Path("/serveWs/{tag}").
 		Name("WebSocket").
-		HandlerFunc(gowmb.ServeWs)
+		HandlerFunc(handler)
 	router.
 		Methods("GET").
 		PathPrefix("/").
 		Name("Static").
 		Handler(http.FileServer(http.Dir("./htdocs")))
 	return router
-
 }
