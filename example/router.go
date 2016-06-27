@@ -16,17 +16,33 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/owulveryck/gowmb"
 )
+
+type tag int
+
+func (t *tag) Parse(s string) error {
+	v, err := strconv.Atoi(s)
+	if err != nil {
+		return err
+	}
+	*t = tag(v)
+	return nil
+}
+
+func newTag() *tag {
+	return new(tag)
+}
 
 // NewRouter is the constructor for all my routes
 func NewRouter() *mux.Router {
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	handler := gowmb.CreateHandler(CreateMessage())
+	handler := gowmb.CreateHandler(CreateMessage(), newTag(), "tag")
 	router.
 		Methods("GET").
 		Path("/serveWs/{tag}").
