@@ -2,7 +2,6 @@ package gowmb_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/owulveryck/gowmb"
 	"time"
@@ -18,7 +17,9 @@ import (
 var (
 	testServer *httptest.Server
 	reader     io.Reader //Ignore this for now
-	baseWsURL  string
+	tsURL      *url.URL
+	okURL      *url.URL
+	koURL      *url.URL
 )
 
 func init() {
@@ -30,18 +31,19 @@ func init() {
 		Path("/serveWs/{tag}").
 		Name("WebSocket").
 		HandlerFunc(handler)
+	router.
+		Methods("GET").
+		Path("/badtag/{tagg}").
+		Name("WebSocket").
+		HandlerFunc(handler)
+	okURL = &url.URL{Scheme: "ws", Host: tsURL.Host, Path: "/serveWs/1234"}
+	koURL = &url.URL{Scheme: "ws", Host: tsURL.Host, Path: "/badtag/1234"}
 
 	testServer = httptest.NewServer(router) //Creating new server with the user handlers
-
-	baseWsURL = fmt.Sprintf("%s/serveWs/", testServer.URL) //Grab the address for the endpoint
-
+	tsURL, _ = url.Parse(testServer.URL)
 }
 
 func TestPingPong(t *testing.T) {
-	tsURL, err := url.Parse(testServer.URL)
-	if err != nil {
-		t.Error(err)
-	}
 	wsURL := url.URL{Scheme: "ws", Host: tsURL.Host, Path: "/serveWs/1234"}
 	c, _, err := websocket.DefaultDialer.Dial(wsURL.String(), nil)
 	if err != nil {
@@ -58,11 +60,10 @@ func TestPingPong(t *testing.T) {
 	}
 
 }
+func TestBadTag(t *testing.T) {
+
+}
 func TestServeWs(t *testing.T) {
-	tsURL, err := url.Parse(testServer.URL)
-	if err != nil {
-		t.Error(err)
-	}
 	httpURL := url.URL{Scheme: tsURL.Scheme, Host: tsURL.Host, Path: "/serveWs/"}
 	// Try to connect to a socket without an ID
 	request, err := http.NewRequest("GET", httpURL.String(), nil)
@@ -97,7 +98,6 @@ func TestServeWs(t *testing.T) {
 	c, _, err := websocket.DefaultDialer.Dial(wsURL.String(), nil)
 	if err != nil {
 		t.Errorf("Cannot connect to the websocket %v", err)
-
 	}
 	defer c.Close()
 
