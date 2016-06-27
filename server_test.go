@@ -36,11 +36,11 @@ func init() {
 		Path("/badtag/{tagg}").
 		Name("WebSocket").
 		HandlerFunc(handler)
-	okURL = &url.URL{Scheme: "ws", Host: tsURL.Host, Path: "/serveWs/1234"}
-	koURL = &url.URL{Scheme: "ws", Host: tsURL.Host, Path: "/badtag/1234"}
 
 	testServer = httptest.NewServer(router) //Creating new server with the user handlers
 	tsURL, _ = url.Parse(testServer.URL)
+	okURL = &url.URL{Scheme: "ws", Host: tsURL.Host, Path: "/serveWs/1234"}
+	koURL = &url.URL{Scheme: "ws", Host: tsURL.Host, Path: "/badtag/1234"}
 }
 
 func TestPingPong(t *testing.T) {
