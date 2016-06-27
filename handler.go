@@ -7,19 +7,23 @@ import (
 )
 
 // CreateHandler takes an "OutMessage" creator and returns a handler
-func CreateHandler(creator OutMessage) func(http.ResponseWriter, *http.Request) {
+func CreateHandler(creator OutMessage, tag Tag, tagName string) func(http.ResponseWriter, *http.Request) {
 
 	// ServeWs handles websocket requests from the peer.
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Let's get the Tag
 		vars := mux.Vars(r)
-		Tag, err := stringToTag(vars["tag"])
+		if _, ok := vars[tagName]; !ok {
+			log.Errorf("Expected tag %v not found", tagName)
+			return
+		}
+		err := tag.Parse(vars[tagName])
 		if err != nil {
-			log.Warn("No Tag provided, bailing out")
+			log.Warn("Cannot parse tag %v: %v", vars[tagName], err)
 			return
 		}
 		var contextLogger = log.WithFields(log.Fields{
-			"Tag":  Tag,
+			"Tag":  tag,
 			"From": r.RemoteAddr,
 		})
 		contextLogger.Info("New connection")
@@ -31,7 +35,7 @@ func CreateHandler(creator OutMessage) func(http.ResponseWriter, *http.Request) 
 		conn := &Conn{send: make(chan OutMessage, 256), ws: ws}
 		reply := &reply{
 			Message: creator,
-			Tag:     Tag,
+			Tag:     tag,
 			Rep:     make(chan *hub),
 		}
 		defer close(reply.Rep)
