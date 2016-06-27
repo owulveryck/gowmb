@@ -105,35 +105,44 @@ func TestServeWs(t *testing.T) {
 
 	go func() {
 		defer close(done)
-		_, message, err := c.ReadMessage()
+		tm, message, err := c.ReadMessage()
 		if err != nil {
-			t.Errorf("read: %v", err)
+			t.Errorf("Error in the message reception: %v (type %v)", err, tm)
 		}
-		t.Logf("recv: %s", message)
+		t.Logf("Received message %s of type %v", message, tm)
 		done <- true
 	}()
-	type input struct {
+	// Sending a message with a Set method that will return success
+	type inputOK struct {
 		ID int `json:"id"`
 	}
 
-	message := &input{ID: 0}
-	b, err := json.Marshal(message)
+	messageOK := &inputOK{ID: 0}
+	b, err := json.Marshal(messageOK)
 	if err != nil {
 		t.Error(err)
 	}
-	//reader = strings.NewReader(string(b))
-	t.Logf("Writing...")
 	err = c.WriteMessage(websocket.TextMessage, b)
-	t.Logf("Done...")
 	if err != nil {
-		t.Errorf("write: %v", err)
+		t.Errorf("Cannot write messageOK %v (%v) to websocket: %v", messageOK, b, err)
 	}
-	t.Logf("Waiting...")
+	// Sending a message with a Set method that will return failure
+	type inputKO struct {
+		ID string `json:"id"`
+	}
+
+	messageKO := &inputKO{ID: "ko"}
+	b, err = json.Marshal(messageKO)
+	if err != nil {
+		t.Error(err)
+	}
+	err = c.WriteMessage(websocket.TextMessage, b)
+	if err != nil {
+		t.Errorf("Cannot write messageKO %v (%v) to websocket: %v", messageKO, b, err)
+	}
 	<-done
 	err = c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseGoingAway, ""))
 	if err != nil {
 		t.Errorf("write close: %v", err)
 	}
-	t.Logf("End...")
-	//<-time.After(5 * time.Second)
 }

@@ -35,8 +35,8 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// Conn is an middleman between the websocket connection and the hub.
-type Conn struct {
+// conn is an middleman between the websocket connection and the hub.
+type conn struct {
 	// The websocket connection.
 	ws *websocket.Conn
 
@@ -45,7 +45,7 @@ type Conn struct {
 }
 
 // readPump pumps messages from the websocket connection to the hub.
-func (c *Conn) readPump(h *hub) {
+func (c *conn) readPump(h *hub) {
 	var contextLogger = log.WithFields(log.Fields{
 		"Tag": h.Tag,
 	})
@@ -69,14 +69,14 @@ func (c *Conn) readPump(h *hub) {
 }
 
 // write writes a message with the given message type and payload.
-func (c *Conn) write(mt int, payload []byte) error {
+func (c *conn) write(mt int, payload []byte) error {
 	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
 	return c.ws.WriteMessage(mt, payload)
 
 }
 
 // writePump pumps messages from the hub to the websocket connection.
-func (c *Conn) writePump() {
+func (c *conn) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()

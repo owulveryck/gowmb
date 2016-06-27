@@ -33,7 +33,7 @@ func CreateHandler(creator Messager, tag Tag, tagName string) func(http.Response
 			log.Println(err)
 			return
 		}
-		conn := &Conn{send: make(chan Messager, 256), ws: ws}
+		conn := &conn{send: make(chan Messager, 256), ws: ws}
 		reply := &reply{
 			Message: creator,
 			Tag:     tag,
