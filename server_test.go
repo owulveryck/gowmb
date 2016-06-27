@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strconv"
 	"testing"
 )
 
@@ -21,48 +20,6 @@ var (
 	reader     io.Reader //Ignore this for now
 	baseWsURL  string
 )
-
-type Message struct {
-	ID int `json:"id"`
-}
-
-func createMessage() *Message {
-	return &Message{}
-}
-
-// Serialize returns a byte array of the message
-func (m *Message) Serialize() ([]byte, error) {
-	return json.Marshal(m)
-}
-
-// Set function updates the content of message m awwording to input n
-// And it fills the Msg's interface Contract
-func (m *Message) Set(n []byte) error {
-	var message struct {
-		ID int `json:"int"`
-	}
-	err := json.Unmarshal(n, &message)
-	if err != nil {
-		return err
-	}
-	m.ID = message.ID
-	return nil
-}
-
-type tag int
-
-func (t *tag) Parse(s string) error {
-	v, err := strconv.Atoi(s)
-	if err != nil {
-		return err
-	}
-	*t = tag(v)
-	return nil
-}
-
-func newTag() *tag {
-	return new(tag)
-}
 
 func init() {
 	router := mux.NewRouter().StrictSlash(true)
